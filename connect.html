@@ -13,7 +13,7 @@
     <script src="http://demo.qunee.com/lib/qunee-min.js"></script>
 </head>
 <body>
-<div class="top-menu">
+<!-- <div class="top-menu">
 	<div class="title">MANAGER</div>
 </div>
 <div class="mainbody">
@@ -23,16 +23,13 @@
 	</div>
 	<div  class="right-show" id="canvas"/>
 	</div>
-</div>
+</div> -->
 <script>
-    //$('body').append(ConnectHTML);
+    $('body').append(ConnectHTML);
     var isconnected = false;
     // var input = document.getElementById("input");
     // var echo = document.getElementById("echo");
-    var wsock;
-    var left_btn_isclosed=false;
-    $(document).ready(function(){
-		  $('.connectButton').click(function(){
+      $('.connectButton').click(function(){
 		    		$(this).val("Connecting...");
 		    		$(this).animate({opacity:0.5},100);
 		    		setTimeout(function(){
@@ -40,6 +37,10 @@
 		    		},400);
 
 		    });
+    var wsock;
+    var left_btn_isclosed=false;
+    function readyevent(){
+		
 
 		    $('.left-btn span').mouseenter(
 		    	function(){
@@ -72,19 +73,19 @@
 		    	if(left_btn_isclosed)
 		    	{
                      $(this).css("background-position","0px 0px"); 
-                     $('right-show').css({"left":"200px","width":"1118px"});
+                     $('.right-show').css({"left":"215px","width":"1118px"});
 
 		    	}
 		    	else{
 		    		 $(this).css("background-position","0px -151px"); 
-		    		 $('right-show').css({"left":"0px","width":"1318px"});
+		    		 $('.right-show').css({"left":"0px","width":"1318px"});
 		    	}
 		    	left_btn_isclosed=!left_btn_isclosed;
 		    });
 			
 
 
-    });
+    };
   
 
     // var plainmsg = {"head":"","record":"","expand":""};
@@ -110,6 +111,7 @@
 				$(this).remove();
 				});
                $('body').append(ShowHTML);
+               readyevent();
             }
             return;
         };
