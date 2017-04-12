@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ConnecttoServer</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="message.js"></script>
+    <script src="data_struct.js"></script>
+	<script src="data_source.js"></script>
+    <script type="text/javascript" src="exchange.js"></script>
+    <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="jquery-ui.min.js"></script>
+    <script src="http://demo.qunee.com/lib/qunee-min.js"></script>
+</head>
+<body>
+<div class="top-menu">
+	<div class="title">MANAGER</div>
+</div>
+<div class="mainbody">
+	<div class="left-menu">
+	</div>
+	<div class="left-btn"><span></span>
+	</div>
+	<div  class="right-show" id="canvas"/>
+	</div>
+</div>
+<script>
+    //$('body').append(ConnectHTML);
+    var isconnected = false;
+    // var input = document.getElementById("input");
+    // var echo = document.getElementById("echo");
+    var wsock;
+    var left_btn_isclosed=false;
+    $(document).ready(function(){
+		  $('.connectButton').click(function(){
+		    		$(this).val("Connecting...");
+		    		$(this).animate({opacity:0.5},100);
+		    		setTimeout(function(){
+		    			mywebsockinit();
+		    		},400);
+
+		    });
+
+		    $('.left-btn span').mouseenter(
+		    	function(){
+		    		var pos=$(this).css("background-position");
+		    		var index=pos.indexOf(' ');
+		            var pos_y=pos.substring(index,pos.length);
+		    		$(this).css("background-position","-22px "+pos_y);
+		    		// if(left_btn_isclosed)
+		    		//     $(this).css("background-position","-22px -151x");
+		    		// else
+		    		// 	$(this).css("background-position","-22px 0px");
+		    	})
+		    $('.left-btn span').mouseleave(
+		    	function(){
+		    		var pos=$(this).css("background-position");
+		    		var index=pos.indexOf(' ');
+		            var pos_y=pos.substring(index,pos.length);
+		    		$(this).css("background-position","0px "+pos_y);
+		    	// 	if(left_btn_isclosed)
+		    	// 		$(this).css("background-position","0px -151px");
+		    	// 	else
+		    	// 	    $(this).css("background-position","0px 0px");
+				 }
+			);
+		    $('.left-btn span').click(function(){
+		    	var width=$('.left-menu').css("width");
+		    	var width=200-parseInt(width);
+		    	$('.left-menu').css("width",width+"px");
+		    	$('.left-btn').css("left",width+"px");
+		    	if(left_btn_isclosed)
+		    	{
+                     $(this).css("background-position","0px 0px"); 
+                     $('right-show').css({"left":"200px","width":"1118px"});
+
+		    	}
+		    	else{
+		    		 $(this).css("background-position","0px -151px"); 
+		    		 $('right-show').css({"left":"0px","width":"1318px"});
+		    	}
+		    	left_btn_isclosed=!left_btn_isclosed;
+		    });
+			
+
+
+    });
+  
+
+    // var plainmsg = {"head":"","record":"","expand":""};
+    // plainmsg["head"]={"tag":"MESG","version":65537};
+    // var jsonstr = JSON.stringify(plainmsg);
+
+    function mywebsockinit() {
+        if (isconnected) {
+            alert("已连接服务器！")
+            return;
+        }
+        var netaddr=document.getElementById("addr");
+        var netport=document.getElementById("port");
+
+ //       wsock = new WebSocket('ws://192.168.159.135:12888', 'cube-wsport');
+        wsock = new WebSocket('ws://'+netaddr.value+':'+netport.value, 'cube-wsport');
+
+        wsock.onopen = function (e) {
+            if (!isconnected) {
+                isconnected = true;
+    //             alert("连接成功！");
+                $("body *:not('script')").each(function(){
+				$(this).remove();
+				});
+               $('body').append(ShowHTML);
+            }
+            return;
+        };
+        wsock.onclose = function (e) {
+        };
+        wsock.onerror = function (e) {
+        	$('.connectButton').val("Connect");
+        	$('.connectButton').animate({opacity:1},100);
+        };
+        wsock.onmessage = function (e) {
+                var msg;
+            msg = JSON.parse(e.data);
+  //          if (msg.replace(/(^s*)|(s*$)/g, "").length != 0) {
+   //             alert(msg);
+   //         }
+ //           for (var key in msg.RECORD) {
+			 	   var graph = new Q.Graph('canvas');
+			    	function createNodes(){
+			    	var i;
+			    	for( i=0;i<array.length;i++){
+			    		var storge_element =new node();
+			    		storge_element.init(i,array[i].name,array[i].uuid,array[i].parent,array[i].type);
+
+			    		nodes_storge.push(storge_element);
+			    		var show_element= graph.createNode(array[i].name);
+			    		
+			    		if(array[i].type=="plugin"){
+			    			nodes_show[array[i].parent].enableSubNetwork=nodes_show[array[i].parent].enableSubNetwork||true;
+			    			show_element.parent=nodes_show[array[i].parent];
+			    		}
+			    		nodes_show.push(show_element);
+			    	}
+			    	
+			    }
+			    function createEdges(){
+			    	var i;
+			    	for(i=0;i<jsonEdges.length;i++){
+			    		var edge_show=graph.createEdge("",nodes_show[jsonEdges[i].from],nodes_show[jsonEdges[i].to]);
+			    		if(nodes_storge[jsonEdges[i].from].gettype()=="plugin")
+			    			edge_show.parent=nodes_show[nodes_storge[jsonEdges[i].from].getparent()];
+			    	}
+
+			    }
+			    createNodes();
+			    createEdges();
+			    var layouter = new Q.TreeLayouter(graph);
+				layouter.layoutType = Q.Consts.LAYOUT_TYPE_TWO_SIDE;
+				layouter.doLayout({callback: function(){
+			    graph.zoomToOverview();
+				}});
+                if (msg.RECORD[0].message != null) {
+                	console.log(msg.RECORD[0].message);
+                    document.getElementById("echo").value += msg.RECORD[0].message;
+                    document.getElementById("echo").value += '\n';
+
+                }
+        }
+    }
+
+    function myFunction() {
+        if(!isconnected)
+        {
+            alert("连接未建立！")
+            return;
+        }
+        
+        var message = {message:input.value};
+        var msg = new Cube_msg("MESSAGE","BASE_MSG");
+        msg.addrecord(message);
+        wsock.send(msg.output())
+    };
+</script>
+<body>
+</html>
