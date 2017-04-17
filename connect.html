@@ -13,7 +13,7 @@
     <script src="http://demo.qunee.com/lib/qunee-min.js"></script>
 </head>
 <body>
-<!-- <div class="top-menu">
+<div class="top-menu">
 	<div class="title">MANAGER</div>
 </div>
 <div class="mainbody">
@@ -22,14 +22,46 @@
 	<div class="left-btn"><span></span>
 	</div>
 	<div  class="right-show" id="canvas"/>
+		<canvas id="main-graph" width="1118" height="596"></canvas>
+		<div class="retangle" style="position: absolute;left:4px;top:4px;width:208px;height:208px;display: block;z-index: 1;cursor: move;">
+			<div class="shape-box" style="position: absolute;left:4px;top:4px;width:198px;height:198px;background-color:white;z-index: 0;display:block; border:solid 1px black;">
+				<canvas class="shape-canvas" width="200" height="200"></canvas>
+			</div>
+			<div id="shape-control" style="position: absolute;left:4px;top:4px;width:198px;height:198px;display: none;z-index: 1; border:solid 1px #63da7e;">
+				<canvas id="control-bounding" width="208" height="208"></canvas>
+				<div class="shape-controler " style="background:white; position: absolute;left: -5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index:2;cursor: nw-resize;"></div>
+				<div class="shape-controler " style="background:white; position: absolute;right:-5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
+				<div class="shape-controler " style="background:white; position: absolute;left: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
+				<div class="shape-controler " style="background:white; position: absolute;right: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
+			</div>
+		    <div class="shape-conn" style="position: absolute; right:-17px;top:83px;width:41px;height:41px;border:solid 1px #f1ad1f;border-radius:20px;background-color: #e8d6af;display: none;z-index: 3;line-height:14px;text-align: center;font-size:14px;cursor: crosshair;"><br>
+		    	conn
+		    </div>
+		</div>
 	</div>
-</div> -->
+</div>
 <script>
-    $('body').append(ConnectHTML);
+
+ //   $('body').append(ConnectHTML);
+ 	$('.retangle').draggable();
+ 	$('.retangle').click(function(){
+ 		$('#shape-control').css("display","block");
+ 	});
+ 	$('.retangle').mouseenter(function(){
+ 		$('.shape-conn').css("display","block");
+ 		 $('.shape-conn').click(function(){
+    			$('.shape-conn').css("background-color","white");
+    			return false;
+   		 });
+ 	}).mouseleave(function(){
+ 		$('.shape-conn').css("display","none");
+ 		$('.shape-conn').css("background-color","#e8d6af");
+ 	});
+ 	
     var isconnected = false;
     // var input = document.getElementById("input");
     // var echo = document.getElementById("echo");
-      $('.connectButton').click(function(){
+     $('.connectButton').click(function(){
 		    		$(this).val("Connecting...");
 		    		$(this).animate({opacity:0.5},100);
 		    		setTimeout(function(){
@@ -37,6 +69,7 @@
 		    		},400);
 
 		    });
+    readyevent();
     var wsock;
     var left_btn_isclosed=false;
     function readyevent(){
@@ -78,7 +111,7 @@
 		    	}
 		    	else{
 		    		 $(this).css("background-position","0px -151px"); 
-		    		 $('.right-show').css({"left":"0px","width":"1318px"});
+		    		 $('.right-show').css({"left":"15px","width":"1318px"});
 		    	}
 		    	left_btn_isclosed=!left_btn_isclosed;
 		    });

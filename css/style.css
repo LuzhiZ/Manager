@@ -80,11 +80,10 @@ span {
 .right-show{
 	height: 596px;
 	width: 1118px;
-	float: left;
-	position: relative;
-	padding-left: 15px;
+	position:relative;
 	top:50px; 
-	left:200px;
+	left:215px;
+
 }
 .title{
 	float: left;
