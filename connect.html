@@ -4,13 +4,14 @@
 	<title>ConnecttoServer</title>
 	<meta charset="utf-8">
 	<link rel="stylesheet" type="text/css" href="./css/style.css">
-    <script type="text/javascript" src="./js/message.js"></script>
-    <script src="./js/data_struct.js"></script>
-	<script src="./js/data_source.js"></script>
+
     <script type="text/javascript" src="./js/exchange.js"></script>
     <script type="text/javascript" src="./js/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="./js/jquery-ui.min.js"></script>
     <script src="http://demo.qunee.com/lib/qunee-min.js"></script>
+    <script src="./js/data_struct.js"></script>
+    <script type="text/javascript" src="./js/message.js"></script>
+	<script src="./js/data_source.js"></script>
 </head>
 <body>
 <div class="top-menu">
@@ -23,41 +24,55 @@
 	</div>
 	<div  class="right-show" id="canvas"/>
 		<canvas id="main-graph" width="1118" height="596"></canvas>
-		<div class="retangle" style="position: absolute;left:4px;top:4px;width:208px;height:208px;display: block;z-index: 1;cursor: move;">
+		<!-- <div class="retangle" style="position: absolute;left:4px;top:4px;width:208px;height:208px;display: block;z-index: 1;cursor: move;">
 			<div class="shape-box" style="position: absolute;left:4px;top:4px;width:198px;height:198px;background-color:white;z-index: 0;display:block; border:solid 1px black;">
 				<canvas class="shape-canvas" width="200" height="200"></canvas>
 			</div>
 			<div id="shape-control" style="position: absolute;left:4px;top:4px;width:198px;height:198px;display: none;z-index: 1; border:solid 1px #63da7e;">
 				<canvas id="control-bounding" width="208" height="208"></canvas>
-				<div class="shape-controler " style="background:white; position: absolute;left: -5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index:2;cursor: nw-resize;"></div>
-				<div class="shape-controler " style="background:white; position: absolute;right:-5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
-				<div class="shape-controler " style="background:white; position: absolute;left: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
-				<div class="shape-controler " style="background:white; position: absolute;right: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;"></div>
+				<div id="nw" class="shape-controler " style="background:white; position: absolute;left: -5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index:2;cursor: nw-resize;"></div>
+				<div id="ne" class="shape-controler " style="background:white; position: absolute;right:-5px;top: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;cursor: ne-resize;"></div>
+				<div id="sw" class="shape-controler " style="background:white; position: absolute;left: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;cursor: sw-resize;"></div>
+				<div id="se" class="shape-controler " style="background:white; position: absolute;right: -5px;bottom: -5px; width: 8px;height: 8px; border:solid 1px #63da7e;z-index: 2;cursor: se-resize;"></div>
 			</div>
 		    <div class="shape-conn" style="position: absolute; right:-17px;top:83px;width:41px;height:41px;border:solid 1px #f1ad1f;border-radius:20px;background-color: #e8d6af;display: none;z-index: 3;line-height:14px;text-align: center;font-size:14px;cursor: crosshair;"><br>
 		    	conn
 		    </div>
-		</div>
+		</div> -->
 	</div>
 </div>
 <script>
-
+     var first=new dot('236713',null,null,null,null,null);
  //   $('body').append(ConnectHTML);
- 	$('.retangle').draggable();
- 	$('.retangle').click(function(){
- 		$('#shape-control').css("display","block");
- 	});
- 	$('.retangle').mouseenter(function(){
- 		$('.shape-conn').css("display","block");
- 		 $('.shape-conn').click(function(){
-    			$('.shape-conn').css("background-color","white");
-    			return false;
-   		 });
- 	}).mouseleave(function(){
- 		$('.shape-conn').css("display","none");
- 		$('.shape-conn').css("background-color","#e8d6af");
- 	});
- 	
+ 	// $('.retangle').draggable();
+ 	// $('.retangle').click(function(){
+ 	// 	$('#shape-control').css("display","block");
+ 	// 	return false;
+ 	// });
+ 	// $('.retangle').mouseenter(function(){
+ 	// 	$('.shape-conn').css("display","block");
+ 	// 	 $('.shape-conn').click(function(){
+  //   			$('.shape-conn').css("background-color","white");
+  //   			return false;
+  //  		 });
+ 	// }).mouseleave(function(){
+ 	// 	$('.shape-conn').css("display","none");
+ 	// 	$('.shape-conn').css("background-color","#e8d6af");
+ 	// });
+ 	// $('#se').mousedown(function(event){
+ 	// 		var el=$(this);
+ 	// 		var disX=event.pageX-el.left;
+ 	// 		var disY=event.pageY-el.top;
+ 	// 		$(this).mousemove(function(ev) {
+ 	// 			var el=$(this);
+		// 		console.log(ev.pageY-el.top+"       "+ev.pageX-el.left);
+		// 	});
+		// return false;
+
+ 	// });
+ 	// $('.right-show').bind('click', function() {  
+  //               $('#shape-control').css("display","none");  
+  //        });
     var isconnected = false;
     // var input = document.getElementById("input");
     // var echo = document.getElementById("echo");
@@ -215,7 +230,7 @@
         var msg = new Cube_msg("MESSAGE","BASE_MSG");
         msg.addrecord(message);
         wsock.send(msg.output())
-    };
+    }
 </script>
 <body>
 </html>
