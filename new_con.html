@@ -101,41 +101,61 @@
 </div> -->
 <script>
      $('body').append(ConnectHTML);
-	 var cur_manager=new cur_status();
-	 var kvmap=[];
-	 var start_point,end_point,edge;
-	 var graph=new Q.Graph('canvas');
-	 var model= graph.graphModel;
-	 model.listChangeDispatcher.addListener(function(evt){
-	 	if(graph.interactionMode=== Q.Consts.INTERACTION_MODE_CREATE_SIMPLE_EDGE&&evt.kind=="add"){
-	 		if(cur_manager.get_curcolor()=="#000000"){
-	 			alert("请选择一种颜色或者新建一条路径");
-	 			model.remove(evt.data);
-	 	    }else{
-	 		var Edge=evt.data;
-	 		    Edge.setStyle(Q.Styles.EDGE_COLOR,cur_manager.get_curcolor());
-                console.log(Edge.from.name);
-	 	   }
-	 	}
+     var cur_manager;
+     var kvmap;
+     var graph;
+     var model;
+     var layoutr;
+     var color_manager;
+     var plugins;
+     var drag;
+     var save_btn;
+function init_Global() {
+     cur_manager=new cur_status();
+     kvmap=[];
+     graph=new Q.Graph('canvas');
+     model= graph.graphModel;
+     var cur_data=null;
+     graph.onkeydown=function(evt){
+        if(evt.keyCode==46&&cur_data){
+            model.remove(cur_data);
+            cur_data=null;
+        }
+     }
+    model.selectionChangeDispatcher.addListener(function(evt){
+        cur_data=evt.data;
         Q.log(evt.kind);
     });
-     var layouter = new Q.TreeLayouter(graph);
-	 factory(topo,kvmap);
-	 init_toolbar();
-     var color_manager=new color_bar();
-     var plugins=new plugin_list();
-     var drag= new dragdiv();
-     var save_btn=new save_to_dot();
+     model.listChangeDispatcher.addListener(function(evt){
+        if(graph.interactionMode=== Q.Consts.INTERACTION_MODE_CREATE_SIMPLE_EDGE&&evt.kind=="add"){
+            if(cur_manager.get_curcolor()=="#000000"){
+                alert("请选择一种颜色或者新建一条路径");
+                model.remove(evt.data);
+            }else{
+            var Edge=evt.data;
+                Edge.setStyle(Q.Styles.EDGE_COLOR,cur_manager.get_curcolor());
+                console.log(Edge.from.name);
+           }
+        }
+        Q.log(evt.kind);
+     });
+     layouter = new Q.TreeLayouter(graph);
+     factory(topo,kvmap);
+     init_toolbar();
+     color_manager=new color_bar();
+     plugins=new plugin_list();
+     drag= new dragdiv();
+     save_btn=new save_to_dot();
   
 
-      $('#myModal1').on('hide.bs.modal', function () {
+     $('#myModal1').on('hide.bs.modal', function () {
             if(!$('.add_type').val()||!$('.add_subtype').val()||!$('.add_colorpicker').val())
                     alert("保存失败");
              else{
                      color_manager.add_newcolor($('.add_colorpicker').val(),$('.add_type').val(),$('.add_subtype').val());
              }
                             
-       });
+      });
       $('.send').on("click",function(){
         // if(!isconnected)
         // {
@@ -151,27 +171,31 @@
         wsock.send(msg.output())
 
       });
- 	$('.right-show').on('click',function(){
- 		$('.line-controler').css("display","none");
- 		$('.controler').css("display","none");
- 		model.clear();
- 	//	$('.clr_group').remove();
- 		color_manager.clearalltype();
- 		cur_manager.init();
- 		return false;
- 	});
-    var isconnected = false;
+
+    $('.right-show').on('click',function(){
+        $('.line-controler').css("display","none");
+        $('.controler').css("display","none");
+        model.clear();
+    //  $('.clr_group').remove();
+        color_manager.clearalltype();
+        cur_manager.init();
+        return false;
+    });
+    readyevent();
+   
     // var input = document.getElementById("input");
     // var echo = document.getElementById("echo");
-     $('.connectButton').click(function(){
-		    		$(this).val("Connecting...");
-		    		$(this).animate({opacity:0.5},100);
-		    		setTimeout(function(){
-		    			mywebsockinit();
-		    		},400);
+     
+}
+   $('.connectButton').click(function(){
+                    $(this).val("Connecting...");
+                    $(this).animate({opacity:0.5},100);
+                    setTimeout(function(){
+                        mywebsockinit();
+                    },400);
 
-		    });
-    readyevent();
+            });
+	var isconnected = false;
     var wsock;
     var left_btn_isclosed=false;
     function readyevent(){
@@ -242,7 +266,7 @@
 				$(this).remove();
 				});
                $('body').append(ShowHTML);
-               readyevent();
+               init_Global();
             }
             return;
         };
