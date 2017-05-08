@@ -18,7 +18,7 @@
 	<script src="./js/data_source.js"></script>
 </head>
 <body>
-<!-- <div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
    aria-labelledby="myModalLabel" aria-hidden="true">
    <div class="modal-dialog">
       <div class="modal-content">
@@ -68,8 +68,13 @@
 	            <input class="add_subtype">
 	        </div>
 	        <div>
-	            <label class="color_label">Color</label>
-	            <input class="add_colorpicker">
+                <label class="color_label">ColorPicker</label>
+                <div class="colorpicker">
+    	            <div id="red"></div>
+                    <div id="green"></div>
+                    <div id="blue"></div>
+                    <div id="swatch" class="ui-widget-content ui-corner-all"></div>
+                </div>
 	        </div>
          </div>
          <div class="modal-footer">
@@ -90,19 +95,26 @@
 	<div class="title">MANAGER</div>
     <div class="plugin_list">
         <div class="plugin_img"></div>
-        <div style="height:30px;width: 100px;float: left;padding-left:10px;text-align: center">PLUGIN</div>
+        <div style="height:30px;width: 100px;float: left;padding-left:10px;text-align: center">SCENE</div>
     </div>
     <button class="send threedbutton orange">发送全图</button>
 	</div>
 	<div class="left-btn"><span></span>
 	</div>
 	<div  class="right-show" id="canvas"/>
+  <!--   <canvas id="right-canvas" width="1088px" height="670px"><canvas> -->
 	</div>
-</div> -->
+</div>
 <script>
-     $('body').append(ConnectHTML);
+    // $('body').append(ConnectHTML);
+     var isconnected = false;
+     var wsock;
+     var left_btn_isclosed=false;
      var cur_manager;
-     var kvmap;
+     var kvmap=[];
+     var fm={};
+     var to={};
+     var lmap=[];
      var graph;
      var model;
      var layoutr;
@@ -110,9 +122,10 @@
      var plugins;
      var drag;
      var save_btn;
+     var scene_tab;
+     init_Global();
 function init_Global() {
      cur_manager=new cur_status();
-     kvmap=[];
      graph=new Q.Graph('canvas');
      model= graph.graphModel;
      var cur_data=null;
@@ -140,19 +153,20 @@ function init_Global() {
         Q.log(evt.kind);
      });
      layouter = new Q.TreeLayouter(graph);
-     factory(topo,kvmap);
+     //factory(topo,kvmap,to,fm);
+     scene_tab=new scene();
      init_toolbar();
      color_manager=new color_bar();
-     plugins=new plugin_list();
+    // plugins=new plugin_list();
      drag= new dragdiv();
      save_btn=new save_to_dot();
   
 
      $('#myModal1').on('hide.bs.modal', function () {
-            if(!$('.add_type').val()||!$('.add_subtype').val()||!$('.add_colorpicker').val())
-                    alert("保存失败");
+            if(!$('.add_type').val()||!$('.add_subtype').val())
+                    alert("属性不足，保存失败");
              else{
-                     color_manager.add_newcolor($('.add_colorpicker').val(),$('.add_type').val(),$('.add_subtype').val());
+                     color_manager.add_newcolor($('#swatch').css("background"),$('.add_type').val(),$('.add_subtype').val());
              }
                             
       });
@@ -166,9 +180,17 @@ function init_Global() {
         for(var i in kvmap){
             new_topo.push(kvmap[i].get_json())
         }
+        var Edges={
+            "name":"Edges",
+            "children":[]
+        }
+        for(var i in lmap){
+            Edges.children.push({"from":lmap[i].from,"to":lmap[i].to});
+        }
+         if(lmap||lmap.length)   new_topo.push(Edges);
         var msg = new Cube_msg("MESSAGE","BASE_MSG");
         msg.addrecord(new_topo);
-        wsock.send(msg.output())
+        // wsock.send(msg.output())
 
       });
 
@@ -195,9 +217,6 @@ function init_Global() {
                     },400);
 
             });
-	var isconnected = false;
-    var wsock;
-    var left_btn_isclosed=false;
     function readyevent(){
 		    $('.left-btn span').mouseenter(
 		    	function(){

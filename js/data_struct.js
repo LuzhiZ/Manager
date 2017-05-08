@@ -22,6 +22,24 @@ color_bar.prototype={
                     });
                 $('.top-menu').append(group);
                 $('.clr_btn').on('click',color_ischoosed);
+                $( "#red, #green, #blue" ).slider({
+                  orientation: "horizontal",
+                  range: "min",
+                  max: 255,
+                  value: 127,
+                  slide: refreshSwatch,
+                  change: refreshSwatch
+                });
+                $( "#red" ).slider( "value", 255 );
+                $( "#green" ).slider( "value", 140 );
+                $( "#blue" ).slider( "value", 60 );
+                 function refreshSwatch() {
+                    var red = $( "#red" ).slider( "value" ),
+                       green = $( "#green" ).slider( "value" ),
+                       blue = $( "#blue" ).slider( "value" ),
+                       hex = rgbToHex("rgb("+red+","+green+","+ blue+")");
+                    $( "#swatch" ).css( "background-color", hex );
+                }
     },
     settypebyindex:function(i,type,subtype){//为dot提供
         $('.clr_btn:eq('+i+')').attr("title",type+","+subtype);
@@ -30,7 +48,7 @@ color_bar.prototype={
         $('.clr_btn').attr("title","");
     },
     add_newcolor:function(color,type,subtype){//为手动添加提供
-        this.colors.push(color);
+        this.colors.push(rgbToHex(color));
         $('.add_btn').remove();
         var button=$("<button class='btn clr_btn'></button>");
         button.attr("title",type+","+subtype);
@@ -132,7 +150,7 @@ var dot=function(name,id,startX,startY,children){
         this.children=children;
 		this.type=null;
 		this.element=null;
-		this.type=null;
+		this.type=null;                
 		this.width=0;
 		this.height=0;
 		this.x=0;
@@ -141,7 +159,7 @@ var dot=function(name,id,startX,startY,children){
 }
 dot.prototype={
     init_div:function(){
-		var string="<div id="+this.id+"></div>";
+		var string="<div id="+this.id+">"+this.name+"</div>";
 		this.element=$(string);
 		var panelement=$('.right-show');
 		this.element.css({
@@ -299,6 +317,7 @@ dot.prototype={
                         top: otop + y,  
                         width: ow + x  
                     }); 
+                    self.change_style(element);
                 } else if(nwmove) {  
                     var x = e.pageX - ox;  
                     var y = e.pageY - oy;  
@@ -307,7 +326,8 @@ dot.prototype={
                         top: otop + y,  
                         width: ow - x,  
                         left: oleft + x  
-                    });  
+                    }); 
+                    self.change_style(element); 
                 } else if(semove) {  
                     var x = e.pageX - ox;  
                     var y = e.pageY - oy;  
@@ -315,6 +335,7 @@ dot.prototype={
                         width: ow + x,  
                         height: oh + y  
                     }); 
+                    self.change_style(element);
                 } else if(swmove) {  
                     var x = e.pageX - ox;  
                     var y = e.pageY - oy;  
@@ -323,6 +344,7 @@ dot.prototype={
                         left: oleft + x,  
                         height: oh + y  
                     });  
+                    self.change_style(element);
                 } else if(drag) {  
                     var x = e.pageX - ox;  
                     var y = e.pageY - oy;  
@@ -330,9 +352,9 @@ dot.prototype={
                         left: oleft + x,  
                         top: otop + y  
                     }); 
+                    self.change_style(element);
                 }
-                var string=(parseInt(element.css("height"))-36)/2;
-                element.children('.shape-conn').css("top",string);
+ 
             }).on('mouseup', function(e) {  
                nemove = false;  
                nwmove = false;  
@@ -355,7 +377,28 @@ dot.prototype={
             "type":"node",
              "children":this.children
             };
+    },
+    get_conn_position:function () {
+        var x=  parseInt(this.element.css("left"))+parseInt(this.element.css("width"));
+        var y= parseInt(this.element.css("top"))+parseInt(this.element.css("height"))/2;
+        return {
+            "x":x,
+            "y":y
+        };
+    },
+    get_name:function(){
+        return this.name;
+    },
+    change_style:function(element){
+        var self=this;
+         self.autoadjuest_conn(element);
+        var position=self.get_conn_position();
+        if(fm[self.id+"dot"])
+            fm[self.id+"dot"].redraw_by_onedot(position.x,position.y,"from");
+        if(to[self.id+"dot"])
+            to[self.id+"dot"].redraw_by_onedot(position.x,position.y,"end");
     }
+
 
     // addplugin:function(child){
     //     var children=this.children;
@@ -368,142 +411,148 @@ dot.prototype={
     //     this.autoadjuest_conn(this.element);
     // }
 }
-var line=function(name,id,from,to,startX,startY,endX,endY){
-        this.name=name;
-        this.id=id;
-        this.from=from;
-        this.to=to;
-        this.element=null;
-        this.ctx=null;
-        this.start=null;
-        this.end=null;
-        this.startX=startX;
-        this.startY=startY;
-        this.endX=endX;
-        this.endY=endY;
-        this.width=Math.abs(endX-startX);
-        this.height=Math.abs(endY-startY);
-        this.k=(endY-startY)/(endX-startX);
-        this.init_div();
+var line= function(name,id,from,to,startX,startY,endX,endY){
+    this.id=id;
+    this.from=from;
+    this.to=to;
+    this.start={"x":startX,"y":startY};
+    this.end={"x":endX,"y":endY};
+    this.original_point={"x":null,"y":null};
+    this.mid1={"x":null,"y":null};
+    this.mid2={"x":null,"y":null};
+    this.width;
+    this.height;
+    this.div;
+    this.canvas;
+    this.ctx;
+    this.init();
 }
 line.prototype={
-    init_div:function(){
-        this.element=$("<div id="+this.id+"></div>");
-        if(this.k>0)
-        this.element.css({
-            'width':this.width+"px",
-            'height': this.height+"px", 
-            'position': 'absolute',
-            'top': this.startY+"px",
-            'left':this.startX+"px"
-        });
-        else
-        this.element.css({
-            'width':this.width+"px",
-            'height': this.height+"px", 
-            'position': 'absolute',
-            'top': this.startY+"px",
-            'left':this.startX+"px"
-        });
-        var panelement=$('.right-show');
-        panelement.append(this.element);
-        //添加canvas
-        var canvas=$("<canvas id="+this.id+"1 width="+this.width+ " height="+this.height+"></canvas>");
-        this.element.append(canvas);
-        this.ctx=document.getElementById(this.id+"1").getContext("2d");
-        //画线
-        var start=$('<div class="line-controler start"></div>');
-        var end=$('<div class="line-controler end"></div>');
-        this.start=start;
-        this.end=end;
-        if(this.k>0){        
-            start.css({
-                'top':'0px',
-                'left':'0px'
-            });
-            end.css({
-                 'bottom':'0px',
-                 'right':'0px'
-            });
-        }
-        else{
-            start.css({
-                'top':'0px',
-                'right':'0px'
-            });
-            end.css({
-                 'bottom':'0px',
-                 'left':'0px'
-            });
-        }
-        this.element.append(start);
-        this.element.append(end);
-        this.ctx.lineWidth=2;
-        this.ctx.beginPath();
-        if(this.k<0){
-            this.ctx.moveTo(this.width,0);
-            this.ctx.lineTo(0,this.height);
-        }else{
-             this.ctx.moveTo(0,0);
-             this.ctx.lineTo(this.width,this.height);
-        }
-        this.ctx.stroke();
-        this.ctx.closePath();
-        //bind事件
-        this.bindevent(this.element,this.ctx);
+    init:function(){
+       this.adjust_origin();
+       this.div=$("<div class='line_div' id=line"+this.id+"></div>");
+       this.div.css({
+            "position":"absolute",
+            "top":this.original_point.y+"px",
+            "left":this.original_point.x+"px",
+            "width":this.width+"px",
+            "height":this.height+"px"
+       });
+       this.canvas=$("<canvas  id=l"+this.id+" width="+this.width+"px height="+this.height+"px ></canvas>");
+       $('.right-show').append(this.div);
+       this.div.append(this.canvas);
+       this.ctx=document.getElementById("l"+this.id).getContext("2d");
+       this.draw();
     },
-    bindevent:function(element,ctx){
-            var ox=0;
-            var oy=0;
-            var otop=0;
-            var oleft=0;
-            var org=element.parent();
-            element.on('mousemove',function(event){
-                otop=parseInt($(this).css("top"));
-                oleft=parseInt($(this).css("left"));
-                ox=event.pageX-oleft-parseInt(org.css("left"));
-                oy=event.pageY-otop-parseInt(org.css("top"));
-
-              if(ctx.isPointInStroke(ox,oy)){
-              //  console.log(ox+" "+oy);
-                element.css("cursor","pointer");
-                }
-              else{
-                 element.css("cursor","default");
-              }
-            });
-            element.on('click',function(event){
-                otop=parseInt($(this).css("top"));
-                oleft=parseInt($(this).css("left"));
-                ox=event.pageX-oleft-parseInt(org.css("left"));
-                oy=event.pageY-otop-parseInt(org.css("top"));
-                if(ctx.isPointInStroke(ox,oy)){
-                    var string="#"+this.id+"> .line-controler";
-                    $(string).css("display","block");
-                }
-                else{
-                    var string="#"+this.id+"> .line-controler";
-                    $(string).css("display","none");
-                }
-                return false;
-            });
+    draw:function(){
+        var ctx=this.ctx; 
+        ctx.save();
+        ctx.beginPath();
+        var start=this.translate(this.start);
+        ctx.moveTo(start.x,start.y);
+        var mid1=this.translate(this.mid1);
+        ctx.lineTo(mid1.x,mid1.y);
+        var mid2=this.translate(this.mid2);
+        ctx.lineTo(mid2.x,mid2.y);
+        var end=this.translate(this.end);
+        ctx.lineTo(end.x,end.y);
+        ctx.stroke();
+        ctx.closePath();
+        this.draw_arrow_head(end);
+    },
+    draw_arrow_head:function(end){
+        var ctx=this.ctx;
+        var a={"x":end.x+5,"y":end.y-5};
+        var b={"x":end.x,"y":end.y};
+        var c={"x":end.x+5,"y":end.y+5};
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.lineTo(c.x,c.y);
+        ctx.closePath();
+        ctx.fill();
+    },
+    adjust_origin:function(){
+         this.original_point.x=(this.start.x>this.end.x?this.end.x:this.start.x)-10;
+         this.original_point.y=(this.start.y>this.end.y?this.end.y:this.start.y)-10;
+         this.width=Math.abs(this.start.x-this.end.x)+20;
+         this.height=Math.abs(this.start.y-this.end.y)+20;
+         var rightx=this.start.x>this.end.x?this.start.x:this.end.x;
+         this.mid1={"x":rightx+10,"y":this.start.y};
+         this.mid2={"x":rightx+10,"y":this.end.y};
+    },
+    translate:function(right_show_xy){
+        return{
+            "x":right_show_xy.x-this.original_point.x,
+            "y":right_show_xy.y-this.original_point.y
+        }
+    },
+    redraw_by_onedot:function(X,Y,type){
+        if(type=="from")
+                this.start={"x":X,"y":Y};
+        else
+                this.end={"x":X,"y":Y};
+        this.adjust_origin();
+        this.div.css({
+            "position":"absolute",
+            "top":this.original_point.y+"px",
+            "left":this.original_point.x+"px",
+            "width":this.width+"px",
+            "height":this.height+"px"
+       });
+        this.canvas.attr("width",this.width+"px");
+        this.canvas.attr("height",this.height+"px");
+        this.draw();
     }
+
 }
-function factory(topo,kvmap){
+function factory(data){
+    
     var i=0;
-    for(i=0;i<topo.length-1;i++){
-        var node=new dot(topo[i].name,i,40,40+i*120,topo[i].children);
+    kvmap=[];
+    to={};
+    fm={};
+    lmap=[];
+    if(!data||data.length==0) return false;
+    for(i=0;i<data.length-1;i++){
+        var node=new dot(data[i].name,i,40+i*200,40+i*120,data[i].children);
         kvmap.push(node);
         
     }
-        // if(topo[i].children!=null){
-        // var children= topo[i].children;
-        // var j;
-        // for(j=0;j<children.length-1;j++){
-        //     //给dot类添加plugin并且为之添加div和事件，根据个数设置dot一个大小和坐标
-        //     node.addplugin(children[j]);
-        // }
-        // }
+    if(data[i].children!=null){
+        var children= data[i].children;
+        var j;
+        for(j=0;j<children.length;j++){
+            var start;
+            var end;
+            for(var k=0;k<kvmap.length;k++){
+                if(children[j].from==kvmap[k].get_name()){
+                    var start_pos=kvmap[k].get_conn_position();
+                    start=k;
+                    continue;
+                }
+                if(children[j].to==kvmap[k].get_name()){
+                    var end_pos=kvmap[k].get_conn_position();
+                    end=k;
+                    continue;
+                }
+                if(start_pos&&end_pos) break;
+            }
+            if(start_pos&&end_pos){
+                    var Line=new line("",j,children[j].from,children[j].to,start_pos.x,start_pos.y,end_pos.x,end_pos.y);
+                    lmap.push(Line);
+                    fm[start+"dot"]=Line;
+                    to[end+"dot"]=Line;
+                    start_pos=null;
+                    end_pos=null;
+            }
+
+        }
+    }
+    console.log(fm);
+    console.log(to);
+
 }
 var cur_status=function(){
     this.cur_node;//当前实例id
@@ -610,8 +659,9 @@ dragdiv.prototype={
                     );
             }       
 }
-var plugin_list=function(){
-    this.plugins=["friend_list","ws_port","crypto"];
+var plugin_list=function(div,list){
+    this.plugins=list;
+    this.div=div;
     this.init();
 }
 plugin_list.prototype={
@@ -619,7 +669,7 @@ plugin_list.prototype={
         var plugins=this.plugins;
         for(var i in plugins){
             var button=$('<button class="plugin threedbutton orange" id='+plugins[i]+'>'+plugins[i]+'</button>');
-            $('.left-menu').append(button);
+            this.div.append(button);
         }
     }
 }
@@ -674,7 +724,7 @@ save_to_dot.prototype={
         return children;
     }
 }
- function color_path_json(ntype,nsubtype,color){
+function color_path_json(ntype,nsubtype,color){
         return {"color":color,
                     "detail":{
                         "type":ntype,
@@ -682,14 +732,61 @@ save_to_dot.prototype={
                         "Edges":[]
                     }
                 };
-    }
-   function pluginjson(name){
+}
+function pluginjson(name){
         return{
                             "name":name,   
                             "uuid":0,
                             "type":"plugin"
              };
-    }
-     function Edge_json(from,to){
+}
+function Edge_json(from,to){
         return {"from":from,"to":to};
-    }
+}
+//,{"name":"传输文件","data":"topo1","plugin":["key_creat","key_manage","lib_record"]}
+var scene=function(){
+    this.scene_list=[{"name":"通信","data":"topo","plugin":["ws_port","hhhh","sdsadsaa"]},{"name":"传输文件","data":"topo1","plugin":["key_creat","key_manage","lib_record"]}];    
+    this.init();
+}
+scene.prototype={
+        init:function(){
+            var self=this;
+            var list=this.scene_list;
+            var div=$("<div id=tabs></div>");
+            var ul=$('<ul></ul>');
+                div.append(ul);
+            for(var i in list){
+                var li=$("<li><a href=#tab"+i+">"+list[i].name+"</a></li>");
+                ul.append(li);
+                var tabdiv=$("<div id=tab"+i+"></div>");
+                var plugin_lst=new plugin_list(tabdiv,list[i].plugin);
+                div.append(tabdiv); 
+            }
+            div.tabs()
+            div.on('tabsactivate', function(event, ui) {
+                  var pre_index=ui.oldTab.index();
+                  var new_topo=[];
+                        for(var i in kvmap){
+                            new_topo.push(kvmap[i].get_json())
+                        }
+                  var Edges={
+                        "name":"Edges",
+                        "children":[]
+                    }
+                    for(var i in lmap){
+                        Edges.children.push({"from":lmap[i].from,"to":lmap[i].to});
+                    }
+                    if(lmap||lmap.length) new_topo.push(Edges);
+                  scene_detail_list[list[pre_index].data]=new_topo;
+                  var index = ui.newTab.index();
+                 // alert(index); // This is never displayed
+                  console.log("selected");
+                  $('.right-show').children("div").remove();
+                  model.clear();
+                  factory(scene_detail_list[list[index].data]);
+            });
+            
+            $('.left-menu').append(div);
+             factory(scene_detail_list[list[0].data]);
+        }
+} 
