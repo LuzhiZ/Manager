@@ -7,6 +7,7 @@
 
 
     <script type="text/javascript" src="./js/exchange.js"></script>
+    <script type="text/javascript" src="./js/base64.min.js"></script>
     <script src="http://demo.qunee.com/lib/qunee-min.js"></script>
     <script type="text/javascript" src="./js/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="./js/jquery-ui.min.js"></script>
@@ -18,95 +19,8 @@
 	<script src="./js/data_source.js"></script>
 </head>
 <body>
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
-   aria-labelledby="myModalLabel" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-         <div class="modal-header">
-            <button type="button" class="close"
-               data-dismiss="modal" aria-hidden="true">
-                  &times;
-            </button>
-            <h4 class="modal-title" id="myModalLabel">
-               补充Path的type和subtype
-            </h4>
-         </div>
-         <div class="modal-body">
-            <label class="">Type</label>
-            <input class="type">
-            <label class="">SubType</label>
-            <input class="subtype">
-         </div>
-         <div class="modal-footer">
-            <button type="button" class="save_type"
-               data-dismiss="modal">保存
-            </button>
-         </div>
-      </div>
-</div>
-</div>
-<div class="modal fade" id="myModal1" tabindex="-1" role="dialog"
-   aria-labelledby="myModalLabel" aria-hidden="true">
-   <div class="modal-dialog">
-      <div class="modal-content">
-         <div class="modal-header">
-            <button type="button" class="close"
-               data-dismiss="modal" aria-hidden="true">
-                  &times;
-            </button>
-            <h4 class="modal-title" id="myModalLabel">
-               新建Path属性
-            </h4>
-         </div>
-         <div class="modal-body">
-            <div>
-	            <label class="type_label">Type</label>
-	            <input class="add_type">
-            </div>
-            <div>
-	            <label class="subtype_label">SubType</label>
-	            <input class="add_subtype">
-	        </div>
-	        <div>
-                <label class="color_label">ColorPicker</label>
-                <div class="colorpicker">
-    	            <div id="red"></div>
-                    <div id="green"></div>
-                    <div id="blue"></div>
-                    <div id="swatch" class="ui-widget-content ui-corner-all"></div>
-                </div>
-	        </div>
-         </div>
-         <div class="modal-footer">
-            <button type="button" class="save_type"
-               data-dismiss="modal">保存
-            </button>
-         </div>
-      </div>
-</div>
-</div>
-<div class="top-menu">
-</div>
-<div  id="canvas" class="show-canvas">
-	<div class="save"></div>
-</div>
-<div class="mainbody">
-	<div class="left-menu">
-	<div class="title">MANAGER</div>
-    <div class="plugin_list">
-        <div class="plugin_img"></div>
-        <div style="height:30px;width: 100px;float: left;padding-left:10px;text-align: center">SCENE</div>
-    </div>
-    <button class="send threedbutton orange">发送全图</button>
-	</div>
-	<div class="left-btn"><span></span>
-	</div>
-	<div  class="right-show" id="canvas"/>
-  <!--   <canvas id="right-canvas" width="1088px" height="670px"><canvas> -->
-	</div>
-</div>
 <script>
-    // $('body').append(ConnectHTML);
+    $('body').append(ConnectHTML);
      var isconnected = false;
      var wsock;
      var left_btn_isclosed=false;
@@ -123,7 +37,7 @@
      var drag;
      var save_btn;
      var scene_tab;
-     init_Global();
+    
 function init_Global() {
      cur_manager=new cur_status();
      graph=new Q.Graph('canvas');
@@ -189,8 +103,10 @@ function init_Global() {
         }
          if(lmap||lmap.length)   new_topo.push(Edges);
         var msg = new Cube_msg("MESSAGE","BASE_MSG");
-        msg.addrecord(new_topo);
-        // wsock.send(msg.output())
+        var string=JSON.stringify(new_topo)
+        var base=Base64.encode(string);
+        msg.addrecord({"message":base});
+        wsock.send(msg.output());
 
       });
 
@@ -284,7 +200,7 @@ function init_Global() {
                 $("body *:not('script')").each(function(){
 				$(this).remove();
 				});
-               $('body').append(ShowHTML);
+               $('body').append(showhtml);
                init_Global();
             }
             return;
