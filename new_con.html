@@ -210,6 +210,7 @@ function init_Global() {
         wsock.onerror = function (e) {
         	$('.connectButton').val("Connect");
         	$('.connectButton').animate({opacity:1},100);
+            alert("连接失败");
         };
         wsock.onmessage = function (e) {
                 var msg;

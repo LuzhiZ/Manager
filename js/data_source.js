@@ -1,22 +1,16 @@
 var scene_detail_list={
 	"topo":[
 		{
+			"name":"backend1",	
+			"uuid":0,
+			"children":null,
+			"type":"node"
+		},
+		{
 			"name":"server",	
 			"uuid":0,
-			"children":null,
-			"type":"node"
-		},
-		{
-			"name":"msg_hub1",	
-			"uuid":0,
-			"children":null,
-			"type":"node"
-		},
-		{
-			"name":"msg_hub2",	
-			"uuid":0,
 			"children":[{
-							"name":"ws_port",	
+							"name":"broadcast",	
 							"uuid":0,
 							"type":"plugin"
 						},
@@ -56,13 +50,7 @@ var scene_detail_list={
 			"type":"node"
 		},
 		{
-			"name":"cell1",	
-			"uuid":0,
-			"children":null,
-			"type":"node"
-		},
-		{
-			"name":"cell2",	
+			"name":"backend2",	
 			"uuid":0,
 			"children":null,
 			"type":"node"
@@ -70,9 +58,8 @@ var scene_detail_list={
 		{
 			"name":"Edges",
 			"children":[
-						{"from":"server","to":"msg_hub1"},
-						{"from":"msg_hub1","to":"cell1"},
-						{"from":"cell2","to":"msg_hub2"}
+						{"from":"backend1","to":"server"},
+						{"from":"server","to":"backend2"}
 					   ]
 		}
 		],

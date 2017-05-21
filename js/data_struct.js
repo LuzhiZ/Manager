@@ -744,7 +744,7 @@ function Edge_json(from,to){
 }
 //,{"name":"传输文件","data":"topo1","plugin":["key_creat","key_manage","lib_record"]}
 var scene=function(){
-    this.scene_list=[{"name":"通信","data":"topo","plugin":["ws_port","hhhh","sdsadsaa"]},{"name":"传输文件","data":"topo1","plugin":["key_creat","key_manage","lib_record"]}];    
+    this.scene_list=[{"name":"通信","data":"topo","plugin":["symm_crypt"]},{"name":"传输文件","data":"topo1","plugin":["key_creat","key_manage","lib_record"]}];    
     this.init();
 }
 scene.prototype={
